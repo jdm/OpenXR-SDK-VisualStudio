@@ -119,7 +119,7 @@ namespace {
         }
 
         void InitializeD3DResources() {
-            const winrt::com_ptr<ID3DBlob> vertexShaderBytes = sample::dx::CompileShader(CubeShader::ShaderHlsl, "MainVS", "vs_5_0");
+            /*const winrt::com_ptr<ID3DBlob> vertexShaderBytes = sample::dx::CompileShader(CubeShader::ShaderHlsl, "MainVS", "vs_5_0");
             CHECK_HRCMD(m_device->CreateVertexShader(
                 vertexShaderBytes->GetBufferPointer(), vertexShaderBytes->GetBufferSize(), nullptr, m_vertexShader.put()));
 
@@ -162,7 +162,7 @@ namespace {
             depthStencilDesc.DepthEnable = true;
             depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
             depthStencilDesc.DepthFunc = D3D11_COMPARISON_GREATER;
-            CHECK_HRCMD(m_device->CreateDepthStencilState(&depthStencilDesc, m_reversedZDepthNoStencilTest.put()));
+            CHECK_HRCMD(m_device->CreateDepthStencilState(&depthStencilDesc, m_reversedZDepthNoStencilTest.put()));*/
         }
 
         const std::vector<DXGI_FORMAT>& SupportedColorFormats() const override {
@@ -193,7 +193,41 @@ namespace {
                         DXGI_FORMAT depthSwapchainFormat,
                         ID3D11Texture2D* depthTexture,
                         const std::vector<const sample::Cube*>& cubes) override {
-            const uint32_t viewInstanceCount = (uint32_t)viewProjections.size();
+            std::vector<char> pixels;
+            int byteLen = imageRect.extent.width * imageRect.extent.height * 4;
+            pixels.resize(byteLen);
+            memset(pixels.data(), 0xFF, byteLen);
+            D3D11_SUBRESOURCE_DATA data;
+            data.pSysMem = pixels.data();
+            data.SysMemPitch = imageRect.extent.width * 4;
+            data.SysMemSlicePitch = byteLen;
+
+            D3D11_TEXTURE2D_DESC desc;
+            desc.Width = imageRect.extent.width;
+            desc.Height = imageRect.extent.height;
+            desc.Format = colorSwapchainFormat;
+            desc.MipLevels = 1;
+            desc.ArraySize = 1;
+            desc.SampleDesc = DXGI_SAMPLE_DESC {1, 0};
+            desc.Usage = D3D11_USAGE_DEFAULT;
+            desc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+            desc.CPUAccessFlags = 0;
+            desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
+
+            winrt::com_ptr<ID3D11Texture2D> solidTexture;
+            CHECK_HRCMD(m_device->CreateTexture2D(&desc, &data, solidTexture.put()));
+
+            D3D11_BOX box;
+            box.left = 0;
+            box.right = imageRect.extent.width;
+            box.top = 0;
+            box.bottom = imageRect.extent.height;
+            box.back = 1;
+            box.front = 0;
+            m_deviceContext->CopySubresourceRegion(colorTexture, 0, 0, 0, 0, solidTexture.get(), 0, &box);
+            m_deviceContext->CopySubresourceRegion(colorTexture, 1, 0, 0, 0, solidTexture.get(), 0, &box);
+
+            /*const uint32_t viewInstanceCount = (uint32_t)viewProjections.size();
             CHECK_MSG(viewInstanceCount <= CubeShader::MaxViewInstance,
                       "Sample shader supports 2 or fewer view instances. Adjust shader to accommodate more.")
 
@@ -258,7 +292,7 @@ namespace {
 
                 // Draw the cube.
                 m_deviceContext->DrawIndexedInstanced((UINT)std::size(CubeShader::c_cubeIndices), viewInstanceCount, 0, 0, 0);
-            }
+            }*/
         }
 
     private:
