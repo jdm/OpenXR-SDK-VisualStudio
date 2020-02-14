@@ -197,27 +197,30 @@ namespace {
             int byteLen = imageRect.extent.width * imageRect.extent.height * 4;
             pixels.resize(byteLen);
             memset(pixels.data(), 0xFF, byteLen);
-            D3D11_SUBRESOURCE_DATA data;
-            data.pSysMem = pixels.data();
+            D3D11_SUBRESOURCE_DATA data[2] = {
+                {pixels.data(), imageRect.extent.width * 4, byteLen},
+                {pixels.data(), imageRect.extent.width * 4, byteLen}
+            };
+            /*data.pSysMem = pixels.data();
             data.SysMemPitch = imageRect.extent.width * 4;
-            data.SysMemSlicePitch = byteLen;
+            data.SysMemSlicePitch = byteLen;*/
 
             D3D11_TEXTURE2D_DESC desc;
             desc.Width = imageRect.extent.width;
             desc.Height = imageRect.extent.height;
             desc.Format = colorSwapchainFormat;
             desc.MipLevels = 1;
-            desc.ArraySize = 1;
-            desc.SampleDesc = DXGI_SAMPLE_DESC {1, 0};
+            desc.ArraySize = 2;
+            desc.SampleDesc = DXGI_SAMPLE_DESC{1, 0};
             desc.Usage = D3D11_USAGE_DEFAULT;
             desc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
             desc.CPUAccessFlags = 0;
             desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
 
             winrt::com_ptr<ID3D11Texture2D> solidTexture;
-            CHECK_HRCMD(m_device->CreateTexture2D(&desc, &data, solidTexture.put()));
+            CHECK_HRCMD(m_device->CreateTexture2D(&desc, &data[0], solidTexture.put()));
 
-            D3D11_BOX box;
+            /*D3D11_BOX box;
             box.left = 0;
             box.right = imageRect.extent.width;
             box.top = 0;
@@ -225,7 +228,8 @@ namespace {
             box.back = 1;
             box.front = 0;
             m_deviceContext->CopySubresourceRegion(colorTexture, 0, 0, 0, 0, solidTexture.get(), 0, &box);
-            m_deviceContext->CopySubresourceRegion(colorTexture, 1, 0, 0, 0, solidTexture.get(), 0, &box);
+            m_deviceContext->CopySubresourceRegion(colorTexture, 1, 0, 0, 0, solidTexture.get(), 0, &box);*/
+            m_deviceContext->CopyResource(colorTexture, solidTexture.get());
 
             /*const uint32_t viewInstanceCount = (uint32_t)viewProjections.size();
             CHECK_MSG(viewInstanceCount <= CubeShader::MaxViewInstance,
@@ -233,24 +237,24 @@ namespace {
 
             CD3D11_VIEWPORT viewport(
                 (float)imageRect.offset.x, (float)imageRect.offset.y, (float)imageRect.extent.width, (float)imageRect.extent.height);
-            m_deviceContext->RSSetViewports(1, &viewport);
+            m_deviceContext->RSSetViewports(1, &viewport);*/
 
             // Create RenderTargetView with the original swapchain format (swapchain image is typeless).
-            winrt::com_ptr<ID3D11RenderTargetView> renderTargetView;
+            /*winrt::com_ptr<ID3D11RenderTargetView> renderTargetView;
             const CD3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc(D3D11_RTV_DIMENSION_TEXTURE2DARRAY, colorSwapchainFormat);
-            CHECK_HRCMD(m_device->CreateRenderTargetView(colorTexture, &renderTargetViewDesc, renderTargetView.put()));
+            CHECK_HRCMD(m_device->CreateRenderTargetView(colorTexture, &renderTargetViewDesc, renderTargetView.put()));*/
 
             // Create a DepthStencilView with the original swapchain format (swapchain image is typeless)
-            winrt::com_ptr<ID3D11DepthStencilView> depthStencilView;
+            /*winrt::com_ptr<ID3D11DepthStencilView> depthStencilView;
             CD3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc(D3D11_DSV_DIMENSION_TEXTURE2DARRAY, depthSwapchainFormat);
-            CHECK_HRCMD(m_device->CreateDepthStencilView(depthTexture, &depthStencilViewDesc, depthStencilView.put()));
+            CHECK_HRCMD(m_device->CreateDepthStencilView(depthTexture, &depthStencilViewDesc, depthStencilView.put()));*/
 
-            const bool reversedZ = viewProjections[0].NearFar.Near > viewProjections[0].NearFar.Far;
-            const float depthClearValue = reversedZ ? 0.f : 1.f;
+            /*const bool reversedZ = viewProjections[0].NearFar.Near > viewProjections[0].NearFar.Far;
+            const float depthClearValue = reversedZ ? 0.f : 1.f;*/
 
             // Clear swapchain and depth buffer. NOTE: This will clear the entire render target view, not just the specified view.
-            m_deviceContext->ClearRenderTargetView(renderTargetView.get(), renderTargetClearColor);
-            m_deviceContext->ClearDepthStencilView(depthStencilView.get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, depthClearValue, 0);
+            //m_deviceContext->ClearRenderTargetView(renderTargetView.get(), renderTargetClearColor);
+            /*m_deviceContext->ClearDepthStencilView(depthStencilView.get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, depthClearValue, 0);
             m_deviceContext->OMSetDepthStencilState(reversedZ ? m_reversedZDepthNoStencilTest.get() : nullptr, 0);
 
             ID3D11RenderTargetView* renderTargets[] = {renderTargetView.get()};

@@ -795,10 +795,11 @@ namespace {
             }
 
             // For Hololens additive display, best to clear render target with transparent black color (0,0,0,0)
-            constexpr DirectX::XMVECTORF32 opaqueColor = {0.184313729f, 0.309803933f, 0.309803933f, 1.000000000f};
-            constexpr DirectX::XMVECTORF32 transparent = {0.000000000f, 0.000000000f, 0.000000000f, 0.000000000f};
-            const DirectX::XMVECTORF32 renderTargetClearColor =
-                (m_environmentBlendMode == XR_ENVIRONMENT_BLEND_MODE_OPAQUE) ? opaqueColor : transparent;
+            //constexpr DirectX::XMVECTORF32 opaqueColor = {0.184313729f, 0.309803933f, 0.309803933f, 1.000000000f};
+            //constexpr DirectX::XMVECTORF32 transparent = {0.000000000f, 0.000000000f, 0.000000000f, 0.000000000f};
+            constexpr DirectX::XMVECTORF32 opaqueColor = {1.000000000f, 1.000000000f, 1.000000000f, 1.000000000f};
+            const DirectX::XMVECTORF32 renderTargetClearColor = opaqueColor;
+                //(m_environmentBlendMode == XR_ENVIRONMENT_BLEND_MODE_OPAQUE) ? opaqueColor : transparent;
 
             m_graphicsPlugin->RenderView(imageRect,
                                          renderTargetClearColor,
